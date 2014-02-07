@@ -13,6 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,6 +30,7 @@ public class DockSetup extends DockSimple {
     private JComboBox parserType;
     private JProgressBar progress;
     private JLabel progressLabel;
+    private JFileChooser fileChooser;
 
     private final static String dockTitle = "Настройка парсера";
 
@@ -36,6 +38,9 @@ public class DockSetup extends DockSimple {
         super("DockSetup", IconContainer.getInstance().loadImage("layers.png"), dockTitle);
 
         this.dockingContainer = dockingContainer;
+
+        fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         folder = new JTextField("d:\\temp\\parser\\zip_code");
         parserType = new JComboBox(new ParserTypeModel());
@@ -109,9 +114,9 @@ public class DockSetup extends DockSimple {
     private class ActionListenerGetFolder implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            LoadIndex loader = dockingContainer.getLoader();
-            if (loader.isExecuted()) {
-                loader.cancel();
+            if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                folder.setText(file.getAbsolutePath());
             }
         }
     }
@@ -134,10 +139,13 @@ public class DockSetup extends DockSimple {
         }
     }
 
-    private static class ActionListenerStop implements ActionListener {
+    private class ActionListenerStop implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-
+            LoadIndex loader = dockingContainer.getLoader();
+            if (loader.isExecuted()) {
+                loader.cancel();
+            }
         }
     }
 

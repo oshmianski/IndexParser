@@ -11,7 +11,9 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by vintselovich on 06.02.14.
@@ -21,9 +23,6 @@ public class ParserZipCode {
     private UIProcessor ui;
 
     public ParserZipCode(String folderPath, UIProcessor ui) {
-//        filePath = "D:\\Temp\\zip.belpost.by3\\zip.belpost.by\\zip.belpost.by\\zip_code\\211149.html";
-//        filePath = "D:\\Temp\\zip.belpost.by3\\zip.belpost.by\\zip.belpost.by\\zip_code\\211172.html";
-
         this.folderPath = folderPath;
         this.ui = ui;
     }
@@ -38,6 +37,7 @@ public class ParserZipCode {
         Element indexStruct = null;
         Elements cities = null;
         CityItem cityItem = null;
+        Map<String, String> keys = new HashMap<String, String>();
 
         try {
             File folder = new File(folderPath);
@@ -54,9 +54,13 @@ public class ParserZipCode {
             int counter = 0;
             int counter2 = 0;
             String cityStr;
+            String region;
+            String district;
+            String unit;
+            String cityType;
+            String cityTitle;
+            String key;
             for (int i = 0; i < listOfFiles.length; i++) {
-                cityStr = new String("");
-
                 if (listOfFiles[i].isFile()) {
                     input = new File(listOfFiles[i].getAbsolutePath());
 
@@ -73,6 +77,10 @@ public class ParserZipCode {
 
                         postOffice = getIndexItem(zip_code.attr("value"), indexStruct);
 
+                        region = WordUtils.capitalizeFully(indexStruct.textNodes().get(2).text().toLowerCase().replace("область", "").trim(), '-', ' ', '.');
+                        district = WordUtils.capitalizeFully(indexStruct.textNodes().get(3).text().toLowerCase().replace("район", "").trim(), '-', ' ', '.');
+                        unit = WordUtils.capitalizeFully(indexStruct.textNodes().get(4).text().toLowerCase().replace("поселковый совет", "").trim(), '-', ' ', '.');
+
                         if (cities.size() > 0) {
                             counter2++;
                         } else {
@@ -81,19 +89,29 @@ public class ParserZipCode {
 
                         for (Element city : cities) {
                             cityStr = city.text();
-
                             indexSpace = cityStr.indexOf(' ');
-                            cityItem = new CityItem(
-                                    WordUtils.capitalizeFully(indexStruct.textNodes().get(2).text().toLowerCase().replace("область", "").trim(), '-', ' ', '.'),
-                                    WordUtils.capitalizeFully(indexStruct.textNodes().get(3).text().toLowerCase().replace("район", "").trim(), '-', ' ', '.'),
-                                    WordUtils.capitalizeFully(indexStruct.textNodes().get(4).text().toLowerCase().replace("поселковый совет", "").trim(), '-', ' ', '.'),
-                                    StringUtils.left(cityStr, indexSpace).trim(),
-                                    WordUtils.capitalizeFully(StringUtils.substring(cityStr, indexSpace).trim(), '-', ' ', '.')
-                            );
 
-                            indexItem = new IndexItem(zip_code.attr("value"), cityItem, listOfFiles[i].getName(), postOffice);
+                            cityType = StringUtils.left(cityStr, indexSpace).trim();
+                            cityTitle = WordUtils.capitalizeFully(StringUtils.substring(cityStr, indexSpace).trim(), '-', ' ', '.');
 
-                            ui.appendIndex(indexItem);
+                            key = region + district + unit + cityType + cityTitle;
+
+                            if (!keys.containsKey(key)) {
+                                cityItem = new CityItem(
+                                        region,
+                                        district,
+                                        unit,
+                                        cityType,
+                                        cityTitle
+                                );
+
+
+                                indexItem = new IndexItem(zip_code.attr("value"), cityItem, listOfFiles[i].getName(), postOffice);
+
+                                ui.appendIndex(indexItem);
+
+                                keys.put(key, "");
+                            }
                         }
                     }
 
@@ -112,7 +130,7 @@ public class ParserZipCode {
                 ui.setProgressLabelText(counter + " [" + counter2 + "]");
             }
 
-            int i = 1;
+            keys.clear();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
