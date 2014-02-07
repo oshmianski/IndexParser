@@ -1,5 +1,7 @@
 package by.oshmianski.objects;
 
+import by.oshmianski.loaders.LoadIndex;
+import by.oshmianski.loaders.Loader;
 import by.oshmianski.ui.edt.UIProcessor;
 import by.oshmianski.utils.MyLog;
 import org.apache.commons.lang3.StringUtils;
@@ -21,10 +23,12 @@ import java.util.Map;
 public class ParserZipCode {
     private String folderPath;
     private UIProcessor ui;
+    private LoadIndex loader;
 
-    public ParserZipCode(String folderPath, UIProcessor ui) {
+    public ParserZipCode(String folderPath, UIProcessor ui, LoadIndex loader) {
         this.folderPath = folderPath;
         this.ui = ui;
+        this.loader = loader;
     }
 
     public void process() {
@@ -79,7 +83,7 @@ public class ParserZipCode {
 
                         region = WordUtils.capitalizeFully(indexStruct.textNodes().get(2).text().toLowerCase().replace("область", "").trim(), '-', ' ', '.');
                         district = WordUtils.capitalizeFully(indexStruct.textNodes().get(3).text().toLowerCase().replace("район", "").trim(), '-', ' ', '.');
-                        unit = WordUtils.capitalizeFully(indexStruct.textNodes().get(4).text().toLowerCase().replace("поселковый совет", "").trim(), '-', ' ', '.');
+                        unit = WordUtils.capitalizeFully(indexStruct.textNodes().get(4).text().toLowerCase().replace("поселковый совет", "").replace("сельский совет", "").trim(), '-', ' ', '.');
 
                         if (cities.size() > 0) {
                             counter2++;
@@ -105,12 +109,14 @@ public class ParserZipCode {
                                         cityTitle
                                 );
 
-
                                 indexItem = new IndexItem(zip_code.attr("value"), cityItem, listOfFiles[i].getName(), postOffice);
 
                                 ui.appendIndex(indexItem);
 
-                                keys.put(key, "");
+                                keys.put(key, key);
+
+                                cityItem = null;
+                                indexItem = null;
                             }
                         }
                     }
@@ -124,15 +130,20 @@ public class ParserZipCode {
                     cityItem = null;
                 }
 
+                Thread.sleep(3);
+                if (loader.isCanceled()) break;
+
                 counter++;
 
                 ui.setProgressValue(counter);
                 ui.setProgressLabelText(counter + " [" + counter2 + "]");
             }
-
-            keys.clear();
         } catch (Exception ex) {
             ex.printStackTrace();
+        } finally {
+            if (keys != null) {
+                keys.clear();
+            }
         }
     }
 

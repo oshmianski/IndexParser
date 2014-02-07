@@ -45,7 +45,6 @@ public class LoadIndex implements Runnable, Loader {
     @Override
     public void run() {
         //действия вначале
-//        ui.startLoading();
         ui.setStartEnable(false);
 
         try {
@@ -75,7 +74,7 @@ public class LoadIndex implements Runnable, Loader {
         ui.clearIndex();
 
         if (ui.getParserType().equalsIgnoreCase("zip_code")) {
-            ParserZipCode parserZipCode = new ParserZipCode(ui.getFolderPath(), getUi());
+            ParserZipCode parserZipCode = new ParserZipCode(ui.getFolderPath(), getUi(), this);
             parserZipCode.process();
         }
     }

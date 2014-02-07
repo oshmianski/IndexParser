@@ -50,13 +50,6 @@ public class DockingContainer {
         construct();
     }
 
-    public DockingContainer(AppletWindowProvider window, JPanel mainPanel) {
-        control = new CControl(window, true);
-        this.mainPanel = mainPanel;
-
-        construct();
-    }
-
     private void construct() {
         mainPanel.add(control.getContentArea(), BorderLayout.CENTER);
 
