@@ -64,33 +64,37 @@ public class ParserZipCode {
 
                     zip_code = doc.select("input[name=zip_code]").first();
 
-                    indexStruct = doc.select("div.context div:eq(2)").first();
-
-                    cities = doc.select("table.tblcity td:has(a)");
-
-                    postOffice = getIndexItem(zip_code.attr("value"), indexStruct);
-
-                    if (cities.size() > 0) {
-                        counter2++;
+                    if (zip_code == null) {
+                        MyLog.add2Log(listOfFiles[i].getName() + ": нет zip_code!", false);
                     } else {
-                        MyLog.add2Log(listOfFiles[i].getName() + ": нет нас. пунктов!", false);
-                    }
+                        indexStruct = doc.select("div.context div:eq(2)").first();
 
-                    for (Element city : cities) {
-                        cityStr = city.text();
+                        cities = doc.select("table.tblcity td:has(a)");
 
-                        indexSpace = cityStr.indexOf(' ');
-                        cityItem = new CityItem(
-                                WordUtils.capitalizeFully(indexStruct.textNodes().get(2).text().toLowerCase().replace("область", "").trim(), '-', ' ', '.'),
-                                WordUtils.capitalizeFully(indexStruct.textNodes().get(3).text().toLowerCase().replace("район", "").trim(), '-', ' ', '.'),
-                                WordUtils.capitalizeFully(indexStruct.textNodes().get(4).text().toLowerCase().replace("поселковый совет", "").trim(), '-', ' ', '.'),
-                                StringUtils.left(cityStr, indexSpace).trim(),
-                                WordUtils.capitalizeFully(StringUtils.substring(cityStr, indexSpace).trim(), '-', ' ', '.')
-                        );
+                        postOffice = getIndexItem(zip_code.attr("value"), indexStruct);
 
-                        indexItem = new IndexItem(zip_code.attr("value"), cityItem, listOfFiles[i].getName(), postOffice);
+                        if (cities.size() > 0) {
+                            counter2++;
+                        } else {
+                            MyLog.add2Log(listOfFiles[i].getName() + ": нет нас. пунктов!", false);
+                        }
 
-                        ui.appendIndex(indexItem);
+                        for (Element city : cities) {
+                            cityStr = city.text();
+
+                            indexSpace = cityStr.indexOf(' ');
+                            cityItem = new CityItem(
+                                    WordUtils.capitalizeFully(indexStruct.textNodes().get(2).text().toLowerCase().replace("область", "").trim(), '-', ' ', '.'),
+                                    WordUtils.capitalizeFully(indexStruct.textNodes().get(3).text().toLowerCase().replace("район", "").trim(), '-', ' ', '.'),
+                                    WordUtils.capitalizeFully(indexStruct.textNodes().get(4).text().toLowerCase().replace("поселковый совет", "").trim(), '-', ' ', '.'),
+                                    StringUtils.left(cityStr, indexSpace).trim(),
+                                    WordUtils.capitalizeFully(StringUtils.substring(cityStr, indexSpace).trim(), '-', ' ', '.')
+                            );
+
+                            indexItem = new IndexItem(zip_code.attr("value"), cityItem, listOfFiles[i].getName(), postOffice);
+
+                            ui.appendIndex(indexItem);
+                        }
                     }
 
                     doc = null;

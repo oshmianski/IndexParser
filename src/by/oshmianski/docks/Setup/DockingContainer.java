@@ -13,6 +13,7 @@ import bibliothek.gui.dock.themes.ThemeManager;
 import bibliothek.gui.dock.util.*;
 import bibliothek.gui.dock.util.color.ColorManager;
 import by.oshmianski.docks.*;
+import by.oshmianski.filter.IndexItem.FilterPanel;
 import by.oshmianski.loaders.LoadIndex;
 import by.oshmianski.main.AppletWindowFrame;
 import by.oshmianski.objects.UIProcessorImpl;
@@ -36,6 +37,7 @@ public class DockingContainer {
     private DockIndex dockIndex;
     private DockSetup dockSetup;
     private DockLog dockLog;
+    private DockIndexItemFilter dockIndexItemFilter;
     private JPanel mainPanel;
 
     private LoadIndex loader;
@@ -82,6 +84,7 @@ public class DockingContainer {
         CGrid grid = new CGrid(control);
 
         dockSetup = new DockSetup(this);
+        dockIndexItemFilter = new DockIndexItemFilter();
         dockIndex = new DockIndex(this);
         dockLog = new DockLog();
         MyLog.setDock(dockLog);
@@ -96,7 +99,8 @@ public class DockingContainer {
         loader = new LoadIndex(uiProcessor);
 
         grid.add(0, 0, 100, 10, dockSetup);
-        grid.add(0, 10, 100, 90, dockIndex);
+        grid.add(0, 10, 85, 90, dockIndex);
+        grid.add(90, 10, 15, 90, dockIndexItemFilter);
 
         control.getContentArea().deploy(grid);
     }
@@ -207,8 +211,13 @@ public class DockingContainer {
     public void dispose() {
         System.out.println("DockingContainer clear...");
         dockIndex.dispose();
+        dockIndexItemFilter.dispose();
         dockSetup.dispose();
         System.out.println("DockingContainer clear...OK");
+    }
+
+    public void setIndexItemFilter(FilterPanel filter) {
+        dockIndexItemFilter.panel.add(filter.getComponent());
     }
 
     public LoadIndex getLoader() {

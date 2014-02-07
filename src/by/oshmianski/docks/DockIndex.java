@@ -2,6 +2,7 @@ package by.oshmianski.docks;
 
 import by.oshmianski.docks.Setup.DockSimple;
 import by.oshmianski.docks.Setup.DockingContainer;
+import by.oshmianski.filter.IndexItem.FilterPanel;
 import by.oshmianski.main.AppletWindowFrame;
 import by.oshmianski.models.IndexModel;
 import by.oshmianski.objects.IndexItem;
@@ -12,6 +13,7 @@ import by.oshmianski.utils.IconContainer;
 import by.oshmianski.utils.MyLog;
 import ca.odell.glazedlists.BasicEventList;
 import ca.odell.glazedlists.EventList;
+import ca.odell.glazedlists.FilterList;
 import ca.odell.glazedlists.SortedList;
 import ca.odell.glazedlists.gui.AbstractTableComparatorChooser;
 import ca.odell.glazedlists.swing.DefaultEventSelectionModel;
@@ -23,7 +25,6 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.text.DecimalFormat;
 
 /**
  * Created with IntelliJ IDEA.
@@ -38,9 +39,11 @@ public class DockIndex extends DockSimple {
     private DefaultEventTableModel model;
     private EventList<IndexItem> entries;
     private SortedList<IndexItem> sortedEntries;
+    private FilterList<IndexItem> filteredEntries;
     private JTable table;
     private DefaultEventSelectionModel issuesSelectionModel;
     private static final String frameTitle = "Данные";
+    private FilterPanel filterPanel;
 
     public DockIndex(DockingContainer dockingContainer) {
         super("DockIndex", IconContainer.getInstance().loadImage("grid.png"), frameTitle);
@@ -55,9 +58,15 @@ public class DockIndex extends DockSimple {
         try {
             entries = GlazedListsSwing.swingThreadProxyList(this.indexItems);
 
+            filterPanel = new FilterPanel(entries, true, dockingContainer);
+
             sortedEntries = new SortedList<IndexItem>(entries, null);
 
-            model = new DefaultEventTableModel(sortedEntries, new IndexModel(sortedEntries));
+            filteredEntries = new FilterList<IndexItem>(sortedEntries, filterPanel.getMatcherEditor());
+
+            model = new DefaultEventTableModel(filteredEntries, new IndexModel(filteredEntries));
+
+            filterPanel.install(model);
 
             table = new BetterJTable(null, true);
 
@@ -92,7 +101,7 @@ public class DockIndex extends DockSimple {
 
             TableComparatorChooser.install(table, sortedEntries, AbstractTableComparatorChooser.MULTIPLE_COLUMN_MOUSE_WITH_UNDO);
 
-            issuesSelectionModel = new DefaultEventSelectionModel(sortedEntries);
+            issuesSelectionModel = new DefaultEventSelectionModel(filteredEntries);
             issuesSelectionModel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
             issuesSelectionModel.addListSelectionListener(new IssuesSelectionListener(dockingContainer, issuesSelectionModel));
             table.setSelectionModel(issuesSelectionModel);
@@ -104,6 +113,8 @@ public class DockIndex extends DockSimple {
 
             panel.add(sp);
 
+            dockingContainer.setIndexItemFilter(filterPanel);
+
         } catch (Exception e) {
             MyLog.add2Log(e);
         } finally {
@@ -113,6 +124,7 @@ public class DockIndex extends DockSimple {
 
     public void clearIndex() {
         indexItems.clear();
+        filterPanel.getTextFilterComponentCityTitle().fireMatchAllA();
     }
 
     public void appendIndex(IndexItem indexItem) {
@@ -162,6 +174,7 @@ public class DockIndex extends DockSimple {
         indexItems = null;
 
         if (model != null) model = null;
+        if (filteredEntries != null) filteredEntries.dispose();
         if (sortedEntries != null) sortedEntries.dispose();
         if (entries != null) entries.dispose();
         if (indexItems != null) indexItems.dispose();
